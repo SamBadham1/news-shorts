@@ -1,0 +1,17 @@
+{
+  "name": "sam-skills",
+  "owner": {
+    "name": "Sam Badham"
+  },
+  "metadata": {
+    "description": "Sam Badham's Claude skills"
+  },
+  "plugins": [
+    {
+      "name": "news-shorts",
+      "source": "./plugins/news-shorts",
+      "description": "Turn a news article into a narrated YouTube Short with the article's photos, a free local voice and word-by-word captions.",
+      "version": "1.1.0"
+    }
+  ]
+}

@@ -14,6 +14,7 @@ import argparse
 import hashlib
 import json
 import math
+import os
 import re
 import shutil
 import subprocess
@@ -26,8 +27,9 @@ import soundfile as sf
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
-MODEL = SKILL_DIR / "models" / "kokoro-v1.0.onnx"
-VOICES = SKILL_DIR / "models" / "voices-v1.0.bin"
+DATA_DIR = Path(os.environ.get("NEWS_SHORTS_HOME", Path.home() / ".news-shorts"))
+MODEL = DATA_DIR / "models" / "kokoro-v1.0.onnx"
+VOICES = DATA_DIR / "models" / "voices-v1.0.bin"
 FONT_BOLD = str(SKILL_DIR / "assets" / "fonts" / "Poppins-ExtraBold.ttf")
 FONT_SEMI = str(SKILL_DIR / "assets" / "fonts" / "Poppins-SemiBold.ttf")
 

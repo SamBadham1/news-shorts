@@ -9,21 +9,27 @@ Paste an article in, get `short.mp4` + upload text out. You (Claude) do the edit
 (reading, choosing photos, writing the script); the scripts do the media work.
 
 `SKILL_DIR` below means the folder this file is in.
-Python to use: `SKILL_DIR/.venv/bin/python` (macOS/Linux) or `SKILL_DIR\.venv\Scripts\python.exe` (Windows).
+The voice model and Python environment live outside it, in `~/.news-shorts`
+(or `$NEWS_SHORTS_HOME`), so plugin updates don't remove them.
+Python to use: `~/.news-shorts/.venv/bin/python` (macOS/Linux) or
+`%USERPROFILE%\.news-shorts\.venv\Scripts\python.exe` (Windows).
 
 ## 0. First run only
 
-If `SKILL_DIR/.venv` or `SKILL_DIR/models/kokoro-v1.0.onnx` is missing, run
-`python SKILL_DIR/scripts/setup.py` (plain system Python 3.10+). It creates the venv,
-installs packages and downloads the ~350 MB voice model. It also checks for ffmpeg; if
-ffmpeg is missing, tell the user how to install it (`winget install ffmpeg`,
-`brew install ffmpeg`, or `sudo apt install ffmpeg`) and stop.
+If that Python or `~/.news-shorts/models/kokoro-v1.0.onnx` is missing, run
+`python SKILL_DIR/scripts/setup.py` (plain system Python 3.10+; `python3` on macOS/Linux).
+It creates the venv, installs packages and downloads the ~350 MB voice model. It also
+checks for ffmpeg; if ffmpeg is missing, tell the user how to install it
+(`winget install ffmpeg`, `brew install ffmpeg`, or `sudo apt install ffmpeg`) and stop.
 
 ### Running in a cloud session (Claude app on phone/web)
 
-Cloud sessions start empty and don't see the user's PC. If the skill isn't on disk:
-1. Clone it: `git clone --depth 1 https://github.com/SamBadham1/news-shorts ~/news-shorts`
-   (attach the repo to the session first if the clone is refused), then use that folder as `SKILL_DIR`.
+Cloud sessions start empty and don't see the user's PC. If this skill was loaded as a
+plugin, `SKILL_DIR` is already on disk. If not (e.g. the user just said "use my
+news-shorts repo"):
+1. Clone it: `git clone --depth 1 https://github.com/SamBadham1/news-shorts ~/news-shorts-repo`
+   (attach the repo to the session first if the clone is refused). `SKILL_DIR` is then
+   `~/news-shorts-repo/plugins/news-shorts/skills/news-shorts`.
 2. Run `python3 SKILL_DIR/scripts/setup.py`. ffmpeg is normally preinstalled; the model
    comes from GitHub, which cloud sessions can reach. Takes about a minute.
 3. Work in the session's working directory instead of `./shorts/`.

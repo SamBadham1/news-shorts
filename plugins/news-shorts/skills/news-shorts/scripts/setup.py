@@ -2,6 +2,9 @@
 """One-time setup: venv, Python packages, Kokoro voice model, ffmpeg check.
 
 Run with any Python 3.10+:  python scripts/setup.py
+
+The venv and model live in ~/.news-shorts (override with NEWS_SHORTS_HOME), outside
+the skill folder, so plugin updates don't wipe them or re-download 350 MB.
 """
 import os
 import shutil
@@ -12,8 +15,9 @@ import venv
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-VENV = ROOT / ".venv"
-MODELS = ROOT / "models"
+DATA = Path(os.environ.get("NEWS_SHORTS_HOME", Path.home() / ".news-shorts"))
+VENV = DATA / ".venv"
+MODELS = DATA / "models"
 MODEL_URL = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/"
 FILES = ["kokoro-v1.0.onnx", "voices-v1.0.bin"]
 
