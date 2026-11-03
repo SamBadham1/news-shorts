@@ -26,7 +26,28 @@ Update later with `/plugin` > Marketplaces > sam-skills > Update marketplace
 
 **First run** (Claude does this for you): installs Python packages and downloads the
 ~350 MB voice model into `~/.news-shorts`. Requires Python 3.10+ and ffmpeg
-(`winget install ffmpeg` / `brew install ffmpeg` / `sudo apt install ffmpeg`).
+(`winget install ffmpeg` / `brew install ffmpeg` / `sudo apt install ffmpeg`). It uses
+Edge or Chrome if installed for sites that block plain downloads, otherwise downloads
+Chromium (~150 MB).
+
+**Optional, recommended:** a free [Pexels API key](https://www.pexels.com/api/) for stock
+photos of generic scenes. Save it once with
+`python <skill folder>/scripts/setup.py --pexels-key YOUR_KEY`, or paste it to Claude.
+
+## Where the photos come from
+
+Claude works down a chain until it has at least 3 relevant photos:
+
+1. **The article** - plain download, then a real headless browser if the site blocks it
+   or loads photos with JavaScript.
+2. **Freely licensed photos** - Wikimedia Commons (named people, places, landmarks;
+   no key) and Pexels (generic scenes; free key).
+3. **Your browser** - if Claude in Chrome or the desktop browser is available.
+4. **You** - Claude asks you to attach 2-3 photos.
+
+`upload.txt` lists a credit and licence for every photo used, and the build reports how
+many came from the article (outlet-owned, may get Content ID claims) versus freely
+licensed (safe to monetise with credit).
 
 ## Use
 
@@ -40,9 +61,10 @@ Paste an article and say *"make a news short from this"* (in Claude Code you can
 | `captions.srt` | Caption file you can upload to YouTube |
 | `script.json` | The script; edit it and ask Claude to rebuild |
 
-In cloud sessions (Claude app on phone/web), news sites must be allowed under
-Settings > Capabilities (allowed domains) for the photo download to work; otherwise
-attach the photos to the chat.
+In cloud sessions (Claude app on phone/web), add these under Settings > Capabilities
+(allowed domains) in claude.ai: the news sites you use, `commons.wikimedia.org`,
+`upload.wikimedia.org`, `api.pexels.com` and `images.pexels.com`. On a Team or
+Enterprise plan an admin can set this once for everyone.
 
 ## Layout
 
@@ -53,6 +75,9 @@ plugins/news-shorts/skills/news-shorts/
   SKILL.md                instructions Claude follows
   scripts/setup.py        one-time setup (venv + voice model in ~/.news-shorts)
   scripts/fetch_images.py pulls photos + captions/credits from the article page
+                          (plain download, then headless browser)
+  scripts/stock_images.py searches Wikimedia Commons / Pexels, records licences
+  scripts/imagestore.py   shared validation, de-duplication and credit lines
   scripts/build.py        voice, captions, motion, render
   assets/fonts/           Poppins (SIL Open Font License)
 ```

@@ -1,6 +1,6 @@
 {
   "name": "news-shorts",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Turn a news article into a narrated YouTube Short with the article's photos, a free local voice and word-by-word captions.",
   "author": {
     "name": "Sam Badham"

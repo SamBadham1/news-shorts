@@ -440,17 +440,42 @@ def main():
 
     # upload notes
     tags = " ".join(script.get("hashtags", []))
-    credits = script.get("image_credit") or script.get("source") or ""
     upload = [f"TITLE:\n{script.get('title', '')}\n",
               f"DESCRIPTION:\n{script.get('description', '').strip()}\n"]
     if script.get("article_url"):
         upload.append(f"Source: {script['article_url']}")
-    if credits:
-        upload.append(f"Images: {credits}")
+    credit_lines, kinds = image_credits(project, script)
+    if credit_lines:
+        upload.append("Images:\n" + "\n".join(f"- {c}" for c in credit_lines))
     upload.append(f"\n{tags}\n")
     (project / "upload.txt").write_text("\n".join(upload), encoding="utf-8")
 
     print(f"Done in {time.time() - t0:.0f}s -> {out_path}")
+    if kinds:
+        print("Image rights: " + ", ".join(f"{n} {k}" for k, n in kinds.items()))
+        if kinds.get("from article"):
+            print("  Article photos are usually owned by the outlet or a photo agency.")
+
+
+def image_credits(project, script):
+    """Credit lines for the images actually used, plus a count by rights type."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from imagestore import credit_line
+    meta_path = project / "images" / "images.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {"images": []}
+    by_file = {e["file"]: e for e in meta.get("images", [])}
+    site = script.get("source") or meta.get("site", "")
+    lines, kinds = [], {}
+    for f in dict.fromkeys(s["image"] for s in script["scenes"]):
+        e = by_file.get(f, {"kind": "user", "file": f})
+        line = credit_line(e, site)
+        if line not in lines:
+            lines.append(line)
+        label = {"article": "from article", "licensed": "freely licensed"}.get(e.get("kind"), "supplied")
+        kinds[label] = kinds.get(label, 0) + 1
+    if script.get("image_credit"):
+        lines.append(script["image_credit"])
+    return lines, kinds
 
 
 if __name__ == "__main__":

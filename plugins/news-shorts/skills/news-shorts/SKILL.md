@@ -33,11 +33,12 @@ news-shorts repo"):
 2. Run `python3 SKILL_DIR/scripts/setup.py`. ffmpeg is normally preinstalled; the model
    comes from GitHub, which cloud sessions can reach. Takes about a minute.
 3. Work in the session's working directory instead of `./shorts/`.
-4. News sites are often blocked by the session's network allowlist. If `fetch_images.py`
-   fails with a connection/proxy refusal, tell the user in one line to add the news site's
-   domain under Settings > Capabilities (allowed domains) in claude.ai on the web, and ask
-   them to attach the article's photos for now. Read the article text with the web fetch
-   tool if the user only gave a link.
+4. Cloud sessions only reach allowed sites. If the article site or Wikimedia/Pexels are
+   refused (connection/proxy refusal), carry on down the photo chain anyway, and at the end
+   tell the user in one line which domains to add under Settings > Capabilities (allowed
+   domains) in claude.ai on the web for next time: the news site, plus
+   `commons.wikimedia.org`, `upload.wikimedia.org`, `api.pexels.com`, `images.pexels.com`.
+   Read the article text with the web fetch tool if the user only gave a link.
 5. Deliver by sending `short.mp4` to the user as a file (they download it on their phone
    and upload to YouTube), and paste the contents of `upload.txt` in the reply so they can
    copy the title and description.
@@ -52,20 +53,43 @@ news-shorts repo"):
 
 ## 2. Get the photos
 
+Work down this chain and stop once you have **3 or more relevant photos**. Don't narrate
+each step to the user; just say at the end where the photos came from.
+
+**a. Article photos.**
 ```
 <python> SKILL_DIR/scripts/fetch_images.py "<url>" <project>
 ```
-
-This saves `images/01.jpg ...` and `images/images.json` (alt text, captions, credits, site name).
-If it fails (bot block, paywall) or finds nothing useful:
-1. Fetch the page HTML another way (e.g. the browser, or ask the user to save the page)
-   and run `fetch_images.py --html page.html <project>`.
-2. Otherwise ask the user to drop photos into `<project>/images/`.
+Tries a plain download, then automatically a real headless browser (Edge/Chrome/Chromium)
+if fewer than 3 photos came back. Saves `images/NN.jpg` and `images/images.json`
+(captions, credits, kind). If the user only pasted text and no URL could be found, skip to b.
 
 **Look at every image** (Read each file). Drop ads, author headshots, unrelated promos and
-graphics full of small text. Note for each keeper what it shows and where the subject
-sits (for `focus`). Too few images is fine: reuse them across scenes with different
-`layout`/`focus` so the motion still varies.
+graphics full of small text. Note what each keeper shows and where the subject sits (for
+`focus`). Count only the relevant ones.
+
+**b. Freely licensed photos** (if fewer than 3 relevant):
+```
+<python> SKILL_DIR/scripts/stock_images.py <project> --query "<q1>" --query "<q2>" [--source both]
+```
+- Write 2-4 specific queries from the story. Wikimedia Commons (no key) is best for named
+  people, places, landmarks, organisations' buildings: `"Chris Hipkins"`, `"Beehive Wellington"`.
+  Pexels (needs a free key) is best for generic scenes: `"courtroom"`, `"hospital corridor"`,
+  `"heavy rain street"`. It skips Pexels with a note if no key is set.
+- Check every result: a Wikimedia photo of a named person must actually be that person
+  (check the file title/description); drop anything misleading.
+- Generic stock shows context, not the event. Never let narration or captions imply a
+  stock photo is of this specific event ("this is the scene of...").
+
+**c. User's browser** (only if still short and a browser tool is available, e.g. Claude in
+Chrome or the desktop app's built-in browser): open the article there, save the page HTML,
+and run `fetch_images.py --html page.html <project>`.
+
+**d. Ask the user** in one line to attach 2-3 photos (from the article or their own) and
+continue once they do. Save attachments into `<project>/images/`.
+
+Too few photos is fine once you have 2 or more: reuse them across scenes with different
+`layout`/`focus` so the motion still varies. With only 1, ask (step d) before building.
 
 ## 3. Write `script.json`
 
@@ -76,7 +100,7 @@ sits (for `focus`). Too few images is fine: reuse them across scenes with differ
   "kicker": "BREAKING | NEWS | UPDATE | EXPLAINED (or omit)",
   "source": "Outlet name",
   "article_url": "https://...",
-  "image_credit": "Photo credits from images.json, else the outlet name",
+  "image_credit": "optional extra credit line; per-photo credits are added automatically",
   "voice": "am_michael",
   "speed": 1.1,
   "emphasis": ["key", "words", "to", "colour"],
@@ -136,5 +160,8 @@ Fix `script.json` and rebuild if not.
 
 Tell the user, briefly: the path to `short.mp4`, the duration, the narration text (so they
 can proof it), and that `upload.txt` (title, description, credits, hashtags) and
-`captions.srt` are next to it. Remind them once per session that news photos usually
-belong to the outlet or a photo agency, so credits stay in the description.
+`captions.srt` are next to it. `upload.txt` lists a credit for every photo used; keep it
+in the YouTube description (CC BY / BY-SA photos legally require it). Pass on the
+"Image rights" line build.py prints: if any photos are "from article", remind the user
+once per session that those usually belong to the outlet or a photo agency and can draw
+Content ID claims, and that the freely licensed ones are safe to monetise with credit.
