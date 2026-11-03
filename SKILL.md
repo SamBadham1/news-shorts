@@ -19,6 +19,23 @@ installs packages and downloads the ~350 MB voice model. It also checks for ffmp
 ffmpeg is missing, tell the user how to install it (`winget install ffmpeg`,
 `brew install ffmpeg`, or `sudo apt install ffmpeg`) and stop.
 
+### Running in a cloud session (Claude app on phone/web)
+
+Cloud sessions start empty and don't see the user's PC. If the skill isn't on disk:
+1. Clone it: `git clone --depth 1 https://github.com/SamBadham1/news-shorts ~/news-shorts`
+   (attach the repo to the session first if the clone is refused), then use that folder as `SKILL_DIR`.
+2. Run `python3 SKILL_DIR/scripts/setup.py`. ffmpeg is normally preinstalled; the model
+   comes from GitHub, which cloud sessions can reach. Takes about a minute.
+3. Work in the session's working directory instead of `./shorts/`.
+4. News sites are often blocked by the session's network allowlist. If `fetch_images.py`
+   fails with a connection/proxy refusal, tell the user in one line to add the news site's
+   domain under Settings > Capabilities (allowed domains) in claude.ai on the web, and ask
+   them to attach the article's photos for now. Read the article text with the web fetch
+   tool if the user only gave a link.
+5. Deliver by sending `short.mp4` to the user as a file (they download it on their phone
+   and upload to YouTube), and paste the contents of `upload.txt` in the reply so they can
+   copy the title and description.
+
 ## 1. Set up the project
 
 - Make `./shorts/<YYYY-MM-DD>-<short-slug>/` in the current working directory.

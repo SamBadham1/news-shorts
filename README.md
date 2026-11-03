@@ -11,13 +11,20 @@ Requires Python 3.10+, ffmpeg and git.
 
 ```bash
 # personal skill, available in every Claude Code project
-git clone <your-repo-url> ~/.claude/skills/news-shorts
+git clone https://github.com/SamBadham1/news-shorts ~/.claude/skills/news-shorts
 python ~/.claude/skills/news-shorts/scripts/setup.py
 ```
 
 On Windows the skills folder is `%USERPROFILE%\.claude\skills\`.
 `setup.py` creates a private virtualenv in `.venv/` and downloads the voice model
-(~350 MB, into `models/`, which is git-ignored).
+(~350 MB, into `models/`, which is git-ignored). Update later with `git pull`.
+
+### From the Claude app (phone / web)
+
+Start a chat, say *"use my news-shorts repo"* and paste an article. Claude clones this
+repo into its cloud workspace, runs setup (~1 minute), and sends back the finished video.
+News sites must be allowed under Settings > Capabilities (allowed domains) for the photo
+download to work; otherwise attach the photos to the chat.
 
 ## Use
 
