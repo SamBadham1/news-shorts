@@ -45,6 +45,9 @@ news-shorts repo"):
 
 ## 1. Set up the project
 
+- Anything the user wrote alongside the article or link is a request for this video
+  (e.g. "female voice", "under 30 seconds", "focus on Canterbury", "no review"). Follow it
+  in every later step.
 - Make `./shorts/<YYYY-MM-DD>-<short-slug>/` in the current working directory.
 - Save the pasted article text to `article.txt` in it.
 - Find the article URL: use the one the user gave; if they pasted only text, search the
@@ -136,6 +139,31 @@ Visual rules:
 
 Voices: `am_michael` (default, US male), `af_heart` / `af_bella` (US female),
 `bm_george` / `bm_daniel` (UK male), `bf_emma` (UK female). Use the user's preference if known.
+For New Zealand, Australian or UK stories prefer a UK voice (`bm_george`, `bf_emma`): the US
+voices say "NZ" as "en-zee" and drop the "and" in numbers like "41,091".
+
+## 3b. Review before rendering
+
+Rendering takes a few minutes, so stop here and let the user steer. Skip this step only
+if the user said not to ask ("just make it", "no review") or nobody is there to answer
+(a scheduled or unattended run).
+
+Show a short plan, in this shape:
+
+> **Title:** ...  ·  **Voice:** bm_george (UK male)  ·  **Length:** ~45 s
+> 1. *[01.jpg - aerial of new subdivision]* New Zealand has consented the most...
+> 2. *[02.jpg - ...]* ...
+>
+> Photos: 3 from the article, 2 from Wikimedia Commons (credited).
+> Anything to note: e.g. a figure from a secondary source, a photo reused.
+
+Then ask once what they'd like, with your multiple-choice question tool if you have one
+(otherwise in plain text). Offer: **Render it** · **Change the wording** · **Change the
+voice** · **Swap photos**, plus free text for any other request (tone, length, a fact to
+add or cut, a different hook). Apply the changes to `script.json` (and fetch or pick
+photos again if asked), show only what changed, and ask again only if the change was big.
+On "Render it", go to step 4. If they ask to hear it first, run `build.py --preview`
+(first 8 s) and send that clip.
 
 ## 4. Build
 
