@@ -106,6 +106,7 @@ Too few photos is fine once you have 2 or more: reuse them across scenes with di
   "image_credit": "optional extra credit line; per-photo credits are added automatically",
   "voice": "am_michael",
   "speed": 1.1,
+  "font": "optional - omit to use the user's saved default",
   "emphasis": ["key", "words", "to", "colour"],
   "description": "2-3 sentence summary for YouTube.",
   "hashtags": ["#news", "#topic", "#shorts"],
@@ -142,6 +143,23 @@ Voices: `am_michael` (default, US male), `af_heart` / `af_bella` (US female),
 For New Zealand, Australian or UK stories prefer a UK voice (`bm_george`, `bf_emma`): the US
 voices say "NZ" as "en-zee" and drop the "and" in numbers like "41,091".
 
+Fonts (captions, headline and kicker; the small "Source:" label stays Poppins):
+- Presets: `poppins` (default; clean, modern), `anton` (tall, condensed, classic Shorts
+  look), `bebas` (all capitals, condensed), `archivo` (very heavy, wide), `serif`
+  (newspaper-style, more serious), `slab` (bold slab serif). All support te reo Māori macrons.
+- The user's own fonts: any .ttf/.otf in `~/.news-shorts/fonts/` (use the file name without
+  extension), or a full path. If the user attaches a font file, copy it there.
+- Leave `font` out to use the user's saved default. Set it only when the user asks for a
+  font for this video, or to suit the story when they've said to choose (e.g. `serif` for
+  serious news). Optional extras: `headline_font` (different font for the top headline)
+  and `font_scale` (e.g. 1.1 for bigger captions, 0.9 for smaller).
+- To show the options: `<python> SKILL_DIR/scripts/fonts.py sample <project>/build/fonts.jpg`
+  and send the image. `fonts.py list` prints them with the saved default marked.
+- If the user says to always use a font, save it:
+  `python SKILL_DIR/scripts/setup.py --font <name>`.
+- build.py checks the font can draw every character (macrons, curly quotes) and falls back
+  to Poppins with a printed note if not; mention that note to the user.
+
 ## 3b. Review before rendering
 
 Rendering takes a few minutes, so stop here and let the user steer. Skip this step only
@@ -150,7 +168,7 @@ if the user said not to ask ("just make it", "no review") or nobody is there to 
 
 Show a short plan, in this shape:
 
-> **Title:** ...  ·  **Voice:** bm_george (UK male)  ·  **Length:** ~45 s
+> **Title:** ...  ·  **Voice:** bm_george (UK male)  ·  **Font:** anton  ·  **Length:** ~45 s
 > 1. *[01.jpg - aerial of new subdivision]* New Zealand has consented the most...
 > 2. *[02.jpg - ...]* ...
 >
@@ -158,9 +176,10 @@ Show a short plan, in this shape:
 > Anything to note: e.g. a figure from a secondary source, a photo reused.
 
 Then ask once what they'd like, with your multiple-choice question tool if you have one
-(otherwise in plain text). Offer: **Render it** · **Change the wording** · **Change the
-voice** · **Swap photos**, plus free text for any other request (tone, length, a fact to
-add or cut, a different hook). Apply the changes to `script.json` (and fetch or pick
+(otherwise in plain text). Offer: **Render it** · **Change the wording** · **Change voice
+or font** · **Swap photos**, plus free text for any other request (tone, length, a fact to
+add or cut, a different hook). For a font change, send the `fonts.py sample` image (with a
+line from this video as `--text`) so they can pick by looking. Apply the changes to `script.json` (and fetch or pick
 photos again if asked), show only what changed, and ask again only if the change was big.
 On "Render it", go to step 4. If they ask to hear it first, run `build.py --preview`
 (first 8 s) and send that clip.

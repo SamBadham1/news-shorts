@@ -69,13 +69,13 @@ def check_browser():
         print("browser: could not install; photo fetching will use plain downloads only")
 
 
-def save_pexels_key(key):
+def save_setting(key, value, label):
     cfg = DATA / "config.json"
     data = json.loads(cfg.read_text()) if cfg.exists() else {}
-    data["pexels_api_key"] = key.strip()
+    data[key] = value.strip()
     DATA.mkdir(parents=True, exist_ok=True)
     cfg.write_text(json.dumps(data, indent=2))
-    print(f"Pexels key saved to {cfg}")
+    print(f"{label} saved to {cfg}")
 
 
 def main():
@@ -83,9 +83,14 @@ def main():
         sys.exit("Python 3.10 or newer is required.")
     ap = argparse.ArgumentParser()
     ap.add_argument("--pexels-key", help="save a free Pexels API key for stock photo search")
+    ap.add_argument("--font", help="save a default caption font (see scripts/fonts.py list)")
     a = ap.parse_args()
     if a.pexels_key:
-        save_pexels_key(a.pexels_key)
+        save_setting("pexels_api_key", a.pexels_key, "Pexels key")
+    if a.font:
+        save_setting("font", a.font, f"Default font '{a.font}'")
+    if (a.font or a.pexels_key) and venv_python().exists():
+        return  # just changing settings on an existing install
 
     if not venv_python().exists():
         print("Creating virtual environment...")

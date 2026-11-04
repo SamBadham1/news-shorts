@@ -26,6 +26,9 @@ import numpy as np
 import soundfile as sf
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import fonts  # noqa: E402
+
 SKILL_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = Path(os.environ.get("NEWS_SHORTS_HOME", Path.home() / ".news-shorts"))
 MODEL = DATA_DIR / "models" / "kokoro-v1.0.onnx"
@@ -164,8 +167,10 @@ def clean_word(w):
 
 
 class CaptionRenderer:
-    def __init__(self, emphasis):
-        self.font = ImageFont.truetype(FONT_BOLD, CAPTION_SIZE)
+    def __init__(self, emphasis, font_path=FONT_BOLD, scale=1.0):
+        size = round(CAPTION_SIZE * scale)
+        self.font = fonts.load(font_path, size)
+        self.stroke = max(5, round(9 * size / CAPTION_SIZE))
         self.emphasis = {e.lower() for e in emphasis}
         self.cache = {}
 
@@ -174,7 +179,7 @@ class CaptionRenderer:
         if key in self.cache:
             return self.cache[key]
         words = [clean_word(w["word"]) for w in chunk["words"]]
-        stroke = 9
+        stroke = self.stroke
         space = self.font.getlength(" ")
         widths = [self.font.getlength(w) for w in words]
         # wrap into lines that fit CAPTION_MAX_W
@@ -280,8 +285,8 @@ class SceneRenderer:
         return src.transform((W, H), Image.AFFINE, data, resample=Image.BICUBIC)
 
 
-def build_overlay(script):
-    """Static layer: top/bottom shading, kicker pill, source label."""
+def build_overlay(script, headline_font=FONT_BOLD):
+    """Static layer: top/bottom shading, kicker pill, headline, source label."""
     ov = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     grad = np.zeros((H, 1), dtype=np.float32)
     ys = np.arange(H)
@@ -292,14 +297,16 @@ def build_overlay(script):
     y = 150
     kicker = (script.get("kicker") or "").upper().strip()
     if kicker:
-        f = ImageFont.truetype(FONT_BOLD, 40)
+        f = fonts.load(headline_font, 40)
         tw = f.getlength(kicker)
         d.rounded_rectangle((60, y, 60 + tw + 48, y + 66), radius=12, fill=KICKER_BG)
-        d.text((60 + 24, y + 6), kicker, font=f, fill=(255, 255, 255))
+        box = d.textbbox((0, 0), kicker, font=f)
+        d.text((60 + 24, y + 33 - (box[1] + box[3]) / 2), kicker, font=f, fill=(255, 255, 255))
         y += 86
     headline = (script.get("headline") or "").strip()
     if headline:
-        f = ImageFont.truetype(FONT_BOLD, 50)
+        f = fonts.load(headline_font, 50)
+        line_h = round(sum(f.getmetrics()) * 1.05)
         words, line, lines = headline.split(), "", []
         for w in words:
             test = f"{line} {w}".strip()
@@ -311,7 +318,7 @@ def build_overlay(script):
         lines.append(line)
         for ln in lines[:3]:
             d.text((60, y), ln, font=f, fill=(255, 255, 255), stroke_width=4, stroke_fill=(0, 0, 0))
-            y += 64
+            y += line_h
     source = (script.get("source") or "").strip()
     if source:
         f = ImageFont.truetype(FONT_SEMI, 30)
@@ -321,6 +328,22 @@ def build_overlay(script):
 
 
 # ----------------------------------------------------------------------------- render
+
+def pick_font(spec, text, what):
+    """Resolve a font spec; fall back to the default if it's unknown or can't draw the text
+    (e.g. a font without macrons for te reo Maori words)."""
+    try:
+        name, path = fonts.resolve(spec)
+    except ValueError as e:
+        print(f"  font: {e} Using {fonts.DEFAULT}.")
+        return fonts.FONT_DIR / fonts.PRESETS[fonts.DEFAULT][0]
+    miss = fonts.missing_glyphs(path, text)
+    if miss:
+        print(f"  font: {name} can't draw {''.join(sorted(miss))} in the {what}; using {fonts.DEFAULT}.")
+        return fonts.FONT_DIR / fonts.PRESETS[fonts.DEFAULT][0]
+    print(f"  font ({what}): {name}")
+    return path
+
 
 def srt_time(t):
     ms = int(round(t * 1000))
@@ -334,6 +357,8 @@ def main():
     ap.add_argument("--music-volume", type=float, default=0.18)
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--preview", action="store_true", help="first 8 seconds only, for a quick look")
+    ap.add_argument("--font", help="caption/headline font: preset name, your font's name, or a "
+                                   ".ttf/.otf path (overrides script.json); see fonts.py list")
     a = ap.parse_args()
 
     if not shutil.which("ffmpeg"):
@@ -344,6 +369,14 @@ def main():
         if not (project / s["image"]).exists():
             sys.exit(f"Missing image: {s['image']}")
     (project / "build").mkdir(exist_ok=True)
+
+    # fonts: --font > script.json > ~/.news-shorts/config.json > poppins
+    all_text = " ".join(s["text"] for s in script["scenes"])
+    caption_font = pick_font(a.font or script.get("font"), all_text, "captions")
+    headline_font = pick_font(script.get("headline_font") or a.font or script.get("font"),
+                              f"{script.get('headline', '')} {(script.get('kicker') or '').upper()}",
+                              "headline")
+    font_scale = float(script.get("font_scale", 1.0))
 
     t0 = time.time()
     words, scenes_t, total = synthesize(project, script)
@@ -380,8 +413,8 @@ def main():
             "-movflags", "+faststart", str(out_path)]
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
 
-    overlay = build_overlay(script)
-    captions = CaptionRenderer(script.get("emphasis", []))
+    overlay = build_overlay(script, headline_font)
+    captions = CaptionRenderer(script.get("emphasis", []), caption_font, font_scale)
     renderers = {}
 
     def scene_renderer(i):

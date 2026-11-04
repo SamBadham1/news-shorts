@@ -34,6 +34,26 @@ Chromium (~150 MB).
 photos of generic scenes. Save it once with
 `python <skill folder>/scripts/setup.py --pexels-key YOUR_KEY`, or paste it to Claude.
 
+## Fonts
+
+Captions and the headline can use any of six bundled fonts, all free (SIL Open Font
+License) and all able to show te reo Māori macrons:
+
+| Name | Look |
+|---|---|
+| `poppins` | Clean, modern and rounded (default) |
+| `anton` | Tall and condensed, punchy - the classic Shorts look |
+| `bebas` | All capitals, condensed - headline style |
+| `archivo` | Very heavy and wide - maximum impact |
+| `serif` | Newspaper-style serif - more serious tone |
+| `slab` | Bold slab serif - editorial but strong |
+
+Ask for one in your request ("use anton"), pick one at the review step (Claude shows a
+sample sheet), or set a default with `setup.py --font anton` (or just tell Claude "always
+use anton"). To use your own brand font, put the .ttf/.otf in `~/.news-shorts/fonts/` (or
+attach it in chat) and ask for it by file name. If a font can't draw a character in the
+script, such as a macron, the build falls back to Poppins and says so.
+
 ## Where the photos come from
 
 Claude works down a chain until it has at least 3 relevant photos:
