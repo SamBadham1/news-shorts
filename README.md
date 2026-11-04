@@ -99,7 +99,9 @@ plugins/news-shorts/skills/news-shorts/
   scripts/stock_images.py searches Wikimedia Commons / Pexels, records licences
   scripts/imagestore.py   shared validation, de-duplication and credit lines
   scripts/build.py        voice, captions, motion, render
-  assets/fonts/           Poppins (SIL Open Font License)
+  scripts/fonts.py        font presets, your own fonts, sample sheet, glyph check
+  assets/fonts/           Poppins, Anton, Bebas Neue, Archivo Black, DM Serif Display,
+                          Alfa Slab One (SIL Open Font License, licences alongside)
 ```
 
 To add another skill later, add `plugins/<name>/` with its own `plugin.json` and
